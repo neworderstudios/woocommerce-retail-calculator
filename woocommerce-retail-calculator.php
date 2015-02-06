@@ -93,8 +93,7 @@ class wcRetailCalc {
 				$('#wc_ret_calc_retail').val($(this).val() ? $(this).val() : 0);
 				wcCalcMargin();
 			});
-			$('#_wc_cog_cost').change();
-			$('#_regular_price').change();
+			
 
 			$('#wc_ret_calc_retail').bind('change keyup',function(){
 				wcCalcMargin();
@@ -106,11 +105,20 @@ class wcRetailCalc {
 				wcCalcRetail();
 			});
 
+			$('#wc_ret_calc_margin,#wc_ret_calc_retail,#wc_ret_calc_margin').blur(function(){
+				$('#wc_ret_calc_cost').val(parseFloat($('#wc_ret_calc_cost').val()).toFixed(2));
+				$('#wc_ret_calc_retail').val(parseFloat($('#wc_ret_calc_retail').val()).toFixed(2));
+			});
+
+			$('#_wc_cog_cost').change();
+			$('#_regular_price').change();
+			$('#wc_ret_calc_margin').blur();
+
 			function wcCalcMargin(){
-				$('#wc_ret_calc_margin').val(parseFloat($('#wc_ret_calc_retail').val()) - parseFloat($('#wc_ret_calc_cost').val()));
+				$('#wc_ret_calc_margin').val((parseFloat($('#wc_ret_calc_retail').val()) / $('#wc_ret_calc_cost').val()).toFixed(3));
 			}
 			function wcCalcRetail(){
-				$('#wc_ret_calc_retail').val(parseFloat($('#wc_ret_calc_cost').val()) + parseFloat($('#wc_ret_calc_margin').val()));
+				$('#wc_ret_calc_retail').val((parseFloat($('#wc_ret_calc_cost').val()) * parseFloat($('#wc_ret_calc_margin').val())).toFixed(2));
 			}
 		});
 		</script>
