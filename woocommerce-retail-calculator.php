@@ -12,8 +12,11 @@ if ( is_admin() ) {
 }
 
 class wcRetailCalc {
+	protected $c;
 
 	public function __construct() {
+		load_plugin_textdomain( 'woocommerce-retail-calculator', false, basename( dirname(__FILE__) ) . '/i18n' );
+
 		add_action( 'wp_ajax_save_wc_product_margin', array( $this, 'save_margin' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_metabox' ) );
 	}
@@ -22,6 +25,8 @@ class wcRetailCalc {
 	 * Let's add the calculator metabox.
 	 */
 	public function add_metabox( $post_type ) {
+		$this->c = get_woocommerce_currency_symbol();
+
 		if ( $post_type == 'product' ) {
 
 			add_meta_box(
@@ -37,7 +42,7 @@ class wcRetailCalc {
 	}
 
 	/**
-	 * Let's render the adjustment box.
+	 * Let's render the calculator box.
 	 *
 	 * @param WP_Post $post The post object.
 	 */
@@ -45,25 +50,25 @@ class wcRetailCalc {
 		?>
 		<table cellpadding="0" cellspacing="0">
 			<tr>
-				<td width="50%" align="right">Cost of goods: &nbsp;$</td>
+				<td width="50%" align="right"><?php echo __( 'Cost of goods', 'woocommerce-retail-calculator' ); ?>: &nbsp;<?php echo $this->c; ?></td>
 				<td width="50%" align="right"><input type="text" style="width:98%;" id="wc_ret_calc_cost" value="0" /></td>
 			</tr>
 			<tr>
-				<td width="50%" align="right" style="padding-top:7px;">Margin: &nbsp;$</td>
+				<td width="50%" align="right" style="padding-top:7px;"><?php echo __( 'Margin', 'woocommerce-retail-calculator' ); ?>: &nbsp;</td>
 				<td width="50%" align="right" style="padding-top:7px;"><input type="text" style="width:98%;" id="wc_ret_calc_margin" value="0" /></td>
 			</tr>
 			<tr>
 				<td colspan="2" style="border-bottom:2px solid #eee;padding-top:7px;"></td>
 			</tr>
 			<tr>
-				<td width="50%" align="right" style="padding-top:7px;">Retail price: &nbsp;$</td>
+				<td width="50%" align="right" style="padding-top:7px;"><?php echo __( 'Retail price', 'woocommerce-retail-calculator' ); ?>: &nbsp;<?php echo $this->c; ?></td>
 				<td width="50%" align="right" style="padding-top:7px;"><input type="text" style="width:98%;" id="wc_ret_calc_retail" value="0" /></td>
 			</tr>
 		</table>
 
 		<div style="float:right;padding-top:10px;">
 			<img src="images/loading.gif" style="display:none;padding-top:12px;" />&nbsp;
-			<a class="button button-primary button-large" href="#" id="wc_ret_calc_save">Save</a>
+			<a class="button button-primary button-large" href="#" id="wc_ret_calc_save"><?php echo __( 'Save', 'woocommerce-retail-calculator' ); ?></a>
 		</div>
 
 		<div style="clear:both;"></div>
