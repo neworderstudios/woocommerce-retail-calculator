@@ -2,7 +2,7 @@
 /*----------------------------------------------------------------------------------------------------------------------
 Plugin Name: WooCommerce Retail Calculator
 Description: A plugin calculating retail prices and margins on product pages. Works with the WooCommerce Cost of Goods plugin.
-Version: 1.0
+Version: 1.1.0
 Author: New Order Studios
 Author URI: http://neworderstudios.com/
 ----------------------------------------------------------------------------------------------------------------------*/
@@ -17,8 +17,11 @@ class wcRetailCalc {
 	public function __construct() {
 		load_plugin_textdomain( 'woocommerce-retail-calculator', false, basename( dirname(__FILE__) ) . '/i18n' );
 
+		add_action( 'quick_edit_custom_box', array( $this, 'get_quickedit_post' ), 10, 2 );
+		add_action( 'wp_ajax_render_wc_product_margin_quickedit', array( $this, 'render_quickedit' ), 10, 2 );
 		add_action( 'wp_ajax_save_wc_product_margin', array( $this, 'save_margin' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_metabox' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'add_quickedit_scripts' ) );
 	}
 
 	/**
@@ -58,7 +61,7 @@ class wcRetailCalc {
 				<td width="50%" align="right" style="padding-top:7px;"><input type="text" style="width:98%;" id="wc_ret_calc_margin" value="0" /></td>
 			</tr>
 			<tr>
-				<td colspan="2" style="border-bottom:2px solid #eee;padding-top:7px;"></td>
+				<td colspan="2" style="border-bottom:2px solid #eee !important;padding-top:7px;"></td>
 			</tr>
 			<tr>
 				<td width="50%" align="right" style="padding-top:7px;"><?php echo __( 'Retail price', 'woocommerce-retail-calculator' ); ?>: &nbsp;<?php echo $this->c; ?></td>
@@ -76,11 +79,11 @@ class wcRetailCalc {
 		<script type="text/javascript">
 		jQuery('document').ready(function($){
 			$('#wc_ret_calc_save').click(function(){
-				$('#retail_calc_inputs img').fadeIn();
+				$('#ret_calc_inputs img,#retail_calc_inputs img').fadeIn();
 				$.post(ajaxurl + '?action=save_wc_product_margin',{post_ID:<?php echo $post->ID; ?>,cost:$('#wc_ret_calc_cost').val(),retail:jQuery('#wc_ret_calc_retail').val()},function(){
-					$('#retail_calc_inputs img').fadeOut();
+					$('#ret_calc_inputs img,#retail_calc_inputs img').fadeOut();
 					$('#_wc_cog_cost').val($('#wc_ret_calc_cost').val());
-					$('#_regular_price').val($('#wc_ret_calc_retail').val());
+					$('#_regular_price,.inline-edit-product:visible input[name=_regular_price]').val($('#wc_ret_calc_retail').val());
 				});
 				return false;
 			});
@@ -93,7 +96,6 @@ class wcRetailCalc {
 				$('#wc_ret_calc_retail').val($(this).val() ? $(this).val() : 0);
 				wcCalcMargin();
 			});
-			
 
 			$('#wc_ret_calc_retail').bind('change keyup',function(){
 				wcCalcMargin();
@@ -112,6 +114,20 @@ class wcRetailCalc {
 
 			$('#_wc_cog_cost').change();
 			$('#_regular_price').change();
+
+			if(!$('#_wc_cog_cost').length){
+				$('#wc_ret_calc_cost').val('<?php echo @array_pop(get_post_meta( $post->ID, '_wc_cog_cost' )); ?>');
+				wcCalcMargin();
+
+				/* Some quickedit bindings */
+				$('.inline-edit-product:visible input[name=_regular_price]').bind('change keyup',function(){
+					$('#wc_ret_calc_retail').val($(this).val() ? $(this).val() : 0);
+					wcCalcMargin();
+				});
+
+				$('.inline-edit-product:visible input[name=_regular_price]').change();
+			}
+
 			$('#wc_ret_calc_margin').blur();
 
 			function wcCalcMargin(){
@@ -123,6 +139,49 @@ class wcRetailCalc {
 		});
 		</script>
 		<?php
+	}
+
+	/**
+	 * Let's add a container for our quickedit module.
+	 * Oof.
+	 *
+	 * @param string $column_name
+	 * @param string $post_type
+	 */
+	public function get_quickedit_post( $column_name, $post_type ) {
+		if ( $column_name != 'woocommerce_waitlist_count' || $post_type != 'product' ) return;
+		?>
+		<style type="text/css">
+		#ret_calc_inputs a{float:right;}
+		#ret_calc_inputs table{
+		    padding: 20px;
+		    width: 100%;
+		    background: #fff;
+		    border: 1px solid #eee;
+		}
+		</style>
+		<fieldset class="inline-edit-col-left">
+			<div id="ret_calc_inputs" class="inline-edit-col" style="margin-top:35px;"> </div>
+		</fieldset>
+		<?php
+	}
+
+	/**
+	 * We'll add some JS to send us the row's post id in quickedit mode.
+	 */
+	public function add_quickedit_scripts( $hook ) {
+		if ( $hook == 'edit.php' && @$_GET['post_type'] == 'product' ) wp_enqueue_script( 'wc_ret_calc_quickedit', plugins_url('scripts/admin_quickedit.js', __FILE__), false, null, true );
+	}
+
+	/**
+	 * Drop some markup in our quickedit container.
+	 */
+	public function render_quickedit() {
+		?>
+		<h4><?php _e( 'Calculate Retail Price', 'woocommerce-retail-calculator' ); ?></h4>
+		<?php
+		$this->render_calc_meta_box( get_post( $_REQUEST['post_ID'] ) );
+		die();
 	}
 
 	/**
