@@ -50,6 +50,8 @@ class wcRetailCalc {
 	 * @param WP_Post $post The post object.
 	 */
 	public function render_calc_meta_box( $post ) {
+		$dec = wc_get_price_decimal_separator();
+		$tho = wc_get_price_thousand_separator();
 		?>
 		<table cellpadding="0" cellspacing="0">
 			<tr>
@@ -77,6 +79,16 @@ class wcRetailCalc {
 		<div style="clear:both;"></div>
 
 		<script type="text/javascript">
+		function rmCurFormat(v){
+			var symbols = {'<?php echo $dec; ?>':'.','<?php echo $tho; ?>':','};
+			return v.replace(/<?php echo ($dec == '.' ? '\\' : '') . $dec; ?>|<?php echo ($tho == '.' ? '\\' : '') . $tho; ?>/gi, function(matched){ return symbols[matched]; });
+		}
+
+		function addCurFormat(v){
+			var symbols = {'.':'<?php echo $dec; ?>',',':'<?php echo $tho; ?>'};
+			return v.replace(/\.|,/gi, function(matched){ return symbols[matched]; });
+		}
+
 		jQuery('document').ready(function($){
 			$('#wc_ret_calc_save').click(function(){
 				$('#ret_calc_inputs img,#retail_calc_inputs img').fadeIn();
@@ -108,8 +120,8 @@ class wcRetailCalc {
 			});
 
 			$('#wc_ret_calc_margin,#wc_ret_calc_retail,#wc_ret_calc_margin').blur(function(){
-				$('#wc_ret_calc_cost').val(parseFloat($('#wc_ret_calc_cost').val()).toFixed(2));
-				$('#wc_ret_calc_retail').val(parseFloat($('#wc_ret_calc_retail').val()).toFixed(2));
+				$('#wc_ret_calc_cost').val(addCurFormat(parseFloat(rmCurFormat($('#wc_ret_calc_cost').val())).toFixed(2)));
+				$('#wc_ret_calc_retail').val(addCurFormat(parseFloat(rmCurFormat($('#wc_ret_calc_retail').val())).toFixed(2)));
 			});
 
 			$('#_wc_cog_cost').change();
@@ -131,10 +143,10 @@ class wcRetailCalc {
 			$('#wc_ret_calc_margin').blur();
 
 			function wcCalcMargin(){
-				$('#wc_ret_calc_margin').val((parseFloat($('#wc_ret_calc_retail').val()) / $('#wc_ret_calc_cost').val()).toFixed(3));
+				$('#wc_ret_calc_margin').val(addCurFormat((parseFloat(rmCurFormat($('#wc_ret_calc_retail').val())) / parseFloat(rmCurFormat($('#wc_ret_calc_cost').val()))).toFixed(3)));
 			}
 			function wcCalcRetail(){
-				$('#wc_ret_calc_retail').val((parseFloat($('#wc_ret_calc_cost').val()) * parseFloat($('#wc_ret_calc_margin').val())).toFixed(2));
+				$('#wc_ret_calc_retail').val(addCurFormat((parseFloat(rmCurFormat($('#wc_ret_calc_cost').val())) * parseFloat(rmCurFormat($('#wc_ret_calc_margin').val()))).toFixed(2)));
 			}
 		});
 		</script>
