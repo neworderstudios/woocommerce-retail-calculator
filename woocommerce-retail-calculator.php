@@ -202,8 +202,8 @@ class wcRetailCalc {
 	function save_margin() {
 		global $wpdb;
 
-		update_post_meta( $_REQUEST['post_ID'], '_wc_cog_cost', stripslashes( $_REQUEST['cost'] ) );
-		update_post_meta( $_REQUEST['post_ID'],'_regular_price', $_REQUEST['retail'] );
+		update_post_meta( $_REQUEST['post_ID'], '_wc_cog_cost', wc_format_decimal( stripslashes( $_REQUEST['cost'] ) ) );
+		update_post_meta( $_REQUEST['post_ID'],'_regular_price', wc_format_decimal( $_REQUEST['retail'] ) );
 
 		die();
 	}
