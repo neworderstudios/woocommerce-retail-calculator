@@ -161,7 +161,7 @@ class wcRetailCalc {
 	 * @param string $post_type
 	 */
 	public function get_quickedit_post( $column_name, $post_type ) {
-		if ( $column_name != 'woocommerce_waitlist_count' || $post_type != 'product' ) return;
+		if ( $column_name != 'cost' || $post_type != 'product' ) return;
 		?>
 		<style type="text/css">
 		#ret_calc_inputs a{float:right;}
